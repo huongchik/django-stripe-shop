@@ -69,7 +69,7 @@
     <h2>Order Details</h2>
     <div class="order-details">
         {% for item in order.items.all %}
-            <li>{{ item.name }}: {{ item.price }} {{ order.currency }}</li>
+            <li>{{ item.name }}: {{ item.price }} {{ item.currency }}</li>
         {% endfor %}
         {% if order.discount %}
             <li>Discount ({{ order.discount.name }}): -{{ order.discount.discount_percent }}%</li>
@@ -78,7 +78,7 @@
             <li>Tax ({{ order.tax.name }}): +{{ order.tax.tax_percent }}%</li>
         {% endif %}
     </div>
-    <p class="total"><strong>Total Cost: {{ order.get_total_cost }} {{ order.currency }}</strong></p>
+    <p class="total"><strong>Total Cost: {{ order.get_total_cost }} EUR</strong></p>
     <div id="card-element">
     </div>
     <div id="card-errors" role="alert"></div>
