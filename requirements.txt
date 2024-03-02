@@ -1,0 +1,4 @@
+Django==5.0.2
+beautifulsoup4==4.12.3
+stripe==8.4.0
+python-decouple==3.8

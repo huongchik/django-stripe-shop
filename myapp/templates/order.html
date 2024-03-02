@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7f6;
+            margin: 20px;
+            padding: 20px;
+        }
+        h1, p, .order-details, .total {
+            color: #333;
+        }
+        .StripeElement {
+            box-sizing: border-box;
+            width: 100%;
+            height: 40px;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+            transition: box-shadow 150ms ease;
+        }
+        .StripeElement--focus {
+            box-shadow: 0 1px 3px 0 rgba(50,50,93,0.1);
+        }
+        .StripeElement--invalid {
+            border-color: #fa755a;
+        }
+        .StripeElement--webkit-autofill {
+            background-color: #fefde5 !important;
+        }
+        #pay-button {
+            background-color: #556cd6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 20px;
+            width: 100%;
+        }
+        #pay-button:hover {
+            background-color: #4455a8;
+        }
+        #card-errors {
+            color: #fa755a;
+            margin-top: 10px;
+        }
+        .order-details li {
+            list-style: none;
+            margin-bottom: 5px;
+        }
+        .total {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Order Payment</h1>
+    <p>Order ID: {{ order.id }}</p>
+    <h2>Order Details</h2>
+    <div class="order-details">
+        {% for item in order.items.all %}
+            <li>{{ item.name }}: {{ item.price }} {{ order.currency }}</li>
+        {% endfor %}
+        {% if order.discount %}
+            <li>Discount ({{ order.discount.name }}): -{{ order.discount.discount_percent }}%</li>
+        {% endif %}
+        {% if order.tax %}
+            <li>Tax ({{ order.tax.name }}): +{{ order.tax.tax_percent }}%</li>
+        {% endif %}
+    </div>
+    <p class="total"><strong>Total Cost: {{ order.get_total_cost }} {{ order.currency }}</strong></p>
+    <div id="card-element">
+    </div>
+    <div id="card-errors" role="alert"></div>
+    <button id="pay-button">Buy</button>
+
+    <script>
+        var stripe = Stripe('{{ STRIPE_PUBLIC_KEY }}');
+        var elements = stripe.elements();
+        var style = {
+            base: {
+                color: "#32325d",
+                fontFamily: '"Roboto", sans-serif',
+                fontSmoothing: "antialiased",
+                fontSize: "16px",
+                "::placeholder": {
+                    color: "#aab7c4"
+                }
+            },
+            invalid: {
+                color: "#fa755a",
+                iconColor: "#fa755a"
+            }
+        };
+        var card = elements.create("card", { style: style });
+        card.mount("#card-element");
+
+        card.on('change', function (event) {
+            var displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+
+        var payButton = document.getElementById('pay-button');
+        payButton.addEventListener('click', function () {
+            fetch('/myapp/create-payment-intent/order/{{ order.id }}/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                }
+            })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (data) {
+                if (data.clientSecret) {
+                    stripe.confirmCardPayment(data.clientSecret, {
+                        payment_method: {
+                            card: card,
+                            billing_details: {
+                                name: 'Customer Name',
+                            },
+                        },
+                    }).then(function (result) {
+                        if (result.error) {
+                            console.error(result.error.message);
+                        } else {
+                            if (result.paymentIntent.status === 'succeeded') {
+                                console.log('Payment successful!');
+                            }
+                        }
+                    });
+                } else {
+                    console.error('Client Secret not received.');
+                }
+            });
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getCookie('csrftoken');
+    </script>
+</body>
+</html>
