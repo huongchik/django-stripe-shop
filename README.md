@@ -6,7 +6,30 @@ For testing, the application is accessible at http://194.53.54.26:8000/.
 
 ## Project Setup
 
+
+### Stripe Configuration
+
+To work with Stripe's payment system, you have two options for configuring the API keys in your project. You can either directly set them in your project's `myproject/settings.py` file or use a `myproject/.env` file (which is the recommended approach for better security and flexibility).
+
+#### Direct Configuration in `settings.py`
+
+You can directly set the API keys in your `settings.py` file as follows:
+
+```python
+STRIPE_PUBLIC_KEY = 'your_public_key'
+STRIPE_SECRET_KEY = 'your_secret_key'
+```
+
+#### Using a .env File (Recommended)
+```python
+STRIPE_PUBLIC_KEY=your_public_key
+STRIPE_SECRET_KEY=your_secret_key
+```
+
+
+
 To get the project up and running, follow these steps:
+
 
 1. Install the project dependencies using `pip install -r requirements.txt`.
 2. Set up the database by running Django migrations with `python manage.py migrate`.
@@ -20,7 +43,10 @@ Alternatively, you can use Docker to set up and run the project:
 
 This will set up the necessary services and start the development server accessible via the configured port.
 
-
+You can fill the Database with Test Data:
+```
+python seed_data.py
+```
 
 ## Accessing the Admin Panel
 
@@ -43,22 +69,4 @@ To view or test individual items, navigate to a URL of the form `http://127.0.0.
 
 
 
-## Stripe Configuration
-
-To work with Stripe's payment system, you have two options for configuring the API keys in your project. You can either directly set them in your project's `myproject/settings.py` file or use a `myproject/.env` file (which is the recommended approach for better security and flexibility).
-
-### Direct Configuration in `settings.py`
-
-You can directly set the API keys in your `settings.py` file as follows:
-
-```python
-STRIPE_PUBLIC_KEY = 'your_public_key'
-STRIPE_SECRET_KEY = 'your_secret_key'
-```
-
-### Using a .env File (Recommended)
-```python
-STRIPE_PUBLIC_KEY=your_public_key
-STRIPE_SECRET_KEY=your_secret_key
-```
 
